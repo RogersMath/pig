@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Pig Counts the Sheep</title>
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Bubblegum+Sans&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+
+:root{
+  --sky:#d4eaf7;
+  --grass:#7bc67e;
+  --grass-dark:#5aaa5e;
+  --earth:#c8a06e;
+  --parchment:#fdf6e3;
+  --warm:#f5a623;
+  --soft-red:#e74c3c;
+  --sheep-white:#f0ede8;
+  --babe-pink:#f9c6c6;
+  --ink:#3d2b1f;
+  --pen-wood:#8B6914;
+}
+
+body{
+  background:var(--sky);
+  font-family:'Patrick Hand',cursive;
+  overflow:hidden;
+  height:100vh;
+  height:100dvh;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+/* ── SCENE ── */
+#scene{
+  width:100%;
+  height:100%;
+  position:relative;
+  overflow:hidden;
+}
+
+/* Sky gradient */
+#scene::before{
+  content:'';
+  position:absolute;inset:0;
+  background:linear-gradient(180deg,#b8daf5 0%,#d4eaf7 45%,#7bc67e 45%,#5aaa5e 100%);
+  z-index:0;
+}
+
+/* Rolling hill */
+.hill{
+  position:absolute;
+  border-radius:50%;
+  z-index:1;
+}
+.hill-1{
+  width:120%;height:180px;
+  background:radial-gradient(ellipse at 50% 100%,#6db870,#7bc67e);
+  bottom:38%;left:-10%;
+  filter:blur(1px);
+}
+.hill-2{
+  width:80%;height:140px;
+  background:#8dd190;
+  bottom:40%;right:-5%;
+  border-radius:60% 60% 0 0;
+}
+
+/* Ground strip */
+.ground{
+  position:absolute;
+  bottom:0;left:0;right:0;
+  height:42%;
+  background:linear-gradient(180deg,#7bc67e 0%,#5aaa5e 30%,#c8a06e 100%);
+  z-index:2;
+}
+.ground::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;height:4px;
+  background:rgba(0,0,0,0.08);
+}
+
+/* Clouds */
+.cloud{
+  position:absolute;
+  z-index:1;
+  animation:drift linear infinite;
+}
+.cloud div{
+  position:absolute;
+  background:rgba(255,255,255,0.85);
+  border-radius:50%;
+}
+@keyframes drift{
+  from{transform:translateX(110vw);}
+  to{transform:translateX(-200px);}
+}
+
+/* ── PEN (right side) ── */
+#pen{
+  position:absolute;
+  bottom:calc(42% - 8px);
+  right:5%;
+  width:130px;height:100px;
+  z-index:10;
+}
+.pen-fence{
+  position:absolute;
+  background:var(--pen-wood);
+  border-radius:3px;
+}
+.fence-top{top:0;left:0;right:0;height:8px;}
+.fence-bottom{bottom:0;left:0;right:0;height:8px;}
+.fence-left{top:0;left:0;bottom:0;width:8px;}
+.fence-right{top:0;right:0;bottom:0;width:8px;}
+/* vertical posts */
+.fence-post{
+  position:absolute;
+  top:-4px;bottom:-4px;width:10px;
+  background:var(--pen-wood);
+  border-radius:3px;
+}
+/* gate opening on left */
+#pen-gate{
+  position:absolute;
+  left:-2px;top:20%;bottom:20%;
+  width:12px;
+  background:var(--grass-dark);
+}
+.pen-inside{
+  position:absolute;
+  inset:8px;
+  background:rgba(200,160,110,0.35);
+  border-radius:2px;
+  display:flex;flex-wrap:wrap;
+  align-items:center;justify-content:center;
+  gap:3px;padding:4px;
+}
+
+/* ── PIG ── */
+#pig{
+  position:absolute;
+  bottom:calc(42% - 4px);
+  left:35%;
+  z-index:20;
+  transition:left 0.5s ease;
+  font-size:44px;
+  line-height:1;
+  filter:drop-shadow(1px 2px 3px rgba(0,0,0,0.18));
+}
+
+/* Pig emotions */
+#pig.happy{animation:pigHop 0.4s ease;}
+#pig.confused{animation:pigWiggle 0.5s ease;}
+@keyframes pigHop{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-14px);}
+}
+@keyframes pigWiggle{
+  0%,100%{transform:rotate(0);}
+  25%{transform:rotate(-12deg);}
+  75%{transform:rotate(12deg);}
+}
+
+/* ── SHEEP ── */
+.sheep{
+  position:absolute;
+  bottom:calc(42% - 4px);
+  z-index:15;
+  cursor:default;
+  font-size:38px;
+  line-height:1;
+  transition:left 1.2s ease;
+  filter:drop-shadow(1px 2px 2px rgba(0,0,0,0.15));
+}
+
+.sheep-penned{
+  font-size:20px;
+  display:inline-flex;
+  align-items:center;justify-content:center;
+}
+
+/* ── COUNTING SHEEP PROBLEM ── */
+#problem-panel{
+  position:absolute;
+  top:12px;left:50%;
+  transform:translateX(-50%);
+  z-index:50;
+  background:rgba(253,246,227,0.97);
+  border:3px solid var(--pen-wood);
+  border-radius:20px;
+  padding:14px 22px;
+  min-width:280px;
+  max-width:90vw;
+  text-align:center;
+  box-shadow:0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.8);
+}
+#problem-text{
+  font-family:'Bubblegum Sans',cursive;
+  font-size:clamp(16px,3vw,22px);
+  color:var(--ink);
+  margin-bottom:12px;
+  line-height:1.3;
+}
+#dot-display{
+  display:flex;gap:8px;flex-wrap:wrap;
+  justify-content:center;
+  margin-bottom:12px;
+  min-height:48px;
+  align-items:center;
+}
+.dot-group{
+  display:flex;gap:2px;flex-wrap:wrap;
+  align-items:center;
+  justify-content:center;
+  padding:6px 10px;
+  background:rgba(123,198,126,0.18);
+  border-radius:12px;
+  border:2px dashed rgba(123,198,126,0.6);
+  max-width:200px;
+}
+.count-sheep{
+  font-size:28px;
+  line-height:1;
+  animation:dotPop 0.3s ease backwards;
+  display:inline-block;
+}
+@keyframes dotPop{
+  from{transform:scale(0);opacity:0;}
+  to{transform:scale(1);opacity:1;}
+}
+.plus-sign{
+  font-family:'Bubblegum Sans',cursive;
+  font-size:28px;color:var(--ink);
+  align-self:center;
+  margin:0 4px;
+  font-weight:bold;
+}
+
+/* ── NUMPAD ── */
+#numpad{
+  position:absolute;
+  bottom:10px;left:50%;
+  transform:translateX(-50%);
+  z-index:50;
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:8px;
+  padding:10px 14px;
+  background:rgba(253,246,227,0.92);
+  border:3px solid var(--pen-wood);
+  border-radius:18px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.15);
+}
+.num-btn{
+  font-family:'Bubblegum Sans',cursive;
+  font-size:22px;
+  width:52px;height:52px;
+  border-radius:50%;
+  border:3px solid var(--pen-wood);
+  background:var(--parchment);
+  color:var(--ink);
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.1s;
+  -webkit-tap-highlight-color:transparent;
+  box-shadow:0 3px 0 var(--pen-wood);
+}
+.num-btn:active,.num-btn.pressed{
+  transform:translateY(3px);
+  box-shadow:0 0 0 var(--pen-wood);
+  background:#e8f5c8;
+}
+.num-btn.correct{
+  background:#b8f0b8 !important;
+  border-color:#4a9;
+  animation:correctPulse 0.35s ease;
+}
+.num-btn.wrong{
+  background:#ffd0d0 !important;
+  border-color:#e74;
+  animation:wrongShake 0.35s ease;
+}
+@keyframes correctPulse{
+  0%,100%{transform:scale(1);}
+  50%{transform:scale(1.15);}
+}
+@keyframes wrongShake{
+  0%,100%{transform:translateX(0);}
+  25%{transform:translateX(-6px);}
+  75%{transform:translateX(6px);}
+}
+
+/* ── HUD ── */
+#hud{
+  position:absolute;
+  top:12px;left:12px;
+  z-index:50;
+}
+#score-bubble{
+  background:rgba(253,246,227,0.92);
+  border:3px solid var(--pen-wood);
+  border-radius:16px;
+  padding:6px 14px;
+  font-family:'Bubblegum Sans',cursive;
+  font-size:16px;color:var(--ink);
+  box-shadow:0 3px 0 var(--pen-wood);
+}
+
+/* ── SPEECH BUBBLE ── */
+#speech{
+  position:absolute;
+  z-index:60;
+  font-family:'Bubblegum Sans',cursive;
+  font-size:14px;
+  color:var(--ink);
+  background:#fff;
+  border:2.5px solid var(--ink);
+  border-radius:14px;
+  padding:7px 12px;
+  white-space:nowrap;
+  opacity:0;
+  transition:opacity 0.25s;
+  pointer-events:none;
+}
+#speech::after{
+  content:'';
+  position:absolute;
+  bottom:-10px;left:14px;
+  border:5px solid transparent;
+  border-top-color:var(--ink);
+}
+#speech::before{
+  content:'';
+  position:absolute;
+  bottom:-7px;left:15px;
+  border:4px solid transparent;
+  border-top-color:#fff;
+  z-index:1;
+}
+#speech.visible{opacity:1;}
+
+/* ── TITLE SCREEN ── */
+#title-screen{
+  position:fixed;inset:0;
+  background:linear-gradient(180deg,#b8daf5,#d4eaf7 50%,#7bc67e);
+  z-index:100;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:16px;
+}
+#title-screen h1{
+  font-family:'Bubblegum Sans',cursive;
+  font-size:clamp(28px,7vw,52px);
+  color:var(--ink);
+  text-shadow:3px 3px 0 rgba(255,255,255,0.6);
+  text-align:center;
+  line-height:1.2;
+}
+.title-pig{
+  font-size:72px;
+  animation:titleBob 2s ease-in-out infinite;
+}
+@keyframes titleBob{
+  0%,100%{transform:translateY(0)rotate(-3deg);}
+  50%{transform:translateY(-12px)rotate(3deg);}
+}
+.title-desc{
+  font-size:clamp(14px,2.5vw,18px);
+  color:var(--ink);
+  text-align:center;
+  max-width:320px;
+  line-height:1.6;
+  opacity:0.85;
+}
+#start-btn{
+  font-family:'Bubblegum Sans',cursive;
+  font-size:22px;
+  padding:14px 40px;
+  background:var(--warm);
+  border:4px solid var(--ink);
+  border-radius:50px;
+  color:var(--ink);
+  cursor:pointer;
+  box-shadow:0 5px 0 var(--ink);
+  transition:all 0.1s;
+  -webkit-tap-highlight-color:transparent;
+}
+#start-btn:active{
+  transform:translateY(4px);
+  box-shadow:0 1px 0 var(--ink);
+}
+
+/* ── WIN SCREEN ── */
+#win-screen{
+  position:fixed;inset:0;
+  background:rgba(180,240,180,0.92);
+  z-index:100;
+  display:none;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:14px;
+}
+#win-screen h2{
+  font-family:'Bubblegum Sans',cursive;
+  font-size:clamp(24px,6vw,44px);
+  color:var(--ink);
+  text-align:center;
+}
+.star-burst{font-size:48px;animation:spin 3s linear infinite;}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.win-sub{font-size:18px;color:var(--ink);text-align:center;}
+#play-again-btn{
+  font-family:'Bubblegum Sans',cursive;
+  font-size:20px;padding:12px 36px;
+  background:var(--warm);border:4px solid var(--ink);
+  border-radius:50px;color:var(--ink);
+  cursor:pointer;box-shadow:0 4px 0 var(--ink);
+  -webkit-tap-highlight-color:transparent;
+}
+#play-again-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink);}
+
+/* confetti */
+.confetti{
+  position:fixed;
+  width:10px;height:10px;
+  border-radius:2px;
+  animation:confettiFall linear forwards;
+  z-index:90;
+  pointer-events:none;
+}
+@keyframes confettiFall{
+  0%{transform:translateY(-20px) rotate(0);opacity:1;}
+  100%{transform:translateY(110vh) rotate(720deg);opacity:0;}
+}
+
+/* sheep trail dots */
+.trail-dot{
+  position:absolute;
+  width:6px;height:6px;
+  background:rgba(100,180,100,0.4);
+  border-radius:50%;
+  z-index:12;
+  animation:trailFade 1s ease forwards;
+}
+@keyframes trailFade{to{opacity:0;transform:scale(0);}}
+</style>
+</head>
+<body>
+
+<!-- TITLE -->
+<div id="title-screen">
+  <div class="title-pig">🐷</div>
+  <h1>Pig Counts<br>the Sheep</h1>
+  <div class="title-desc">Help Pig herd all the sheep into the pen by counting!</div>
+  <button id="start-btn" onclick="startGame()">Let's go! 🐑</button>
+</div>
+
+<!-- WIN -->
+<div id="win-screen">
+  <div class="star-burst">⭐</div>
+  <h2>All sheep are home!<br>Good pig! 🐷</h2>
+  <div class="win-sub" id="win-sub"></div>
+  <button id="play-again-btn" onclick="startGame()">Play again! 🐷</button>
+</div>
+
+<!-- SCENE -->
+<div id="scene">
+  <div class="hill hill-1"></div>
+  <div class="hill hill-2"></div>
+  <div class="ground"></div>
+
+  <!-- Pen -->
+  <div id="pen">
+    <div class="pen-fence fence-top"></div>
+    <div class="pen-fence fence-bottom"></div>
+    <div class="pen-fence fence-left"></div>
+    <div class="pen-fence fence-right"></div>
+    <div class="pen-fence fence-post" style="left:25%"></div>
+    <div class="pen-fence fence-post" style="left:50%"></div>
+    <div class="pen-fence fence-post" style="left:75%"></div>
+    <div id="pen-gate"></div>
+    <div class="pen-inside" id="pen-inside"></div>
+  </div>
+
+  <!-- Pig -->
+  <div id="pig">🐷</div>
+
+  <!-- Speech bubble -->
+  <div id="speech"></div>
+
+  <!-- Problem panel -->
+  <div id="problem-panel">
+    <div id="problem-text"></div>
+    <div id="dot-display"></div>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div id="score-bubble">🐑 <span id="score-text">0 / 0</span></div>
+  </div>
+
+  <!-- Numpad -->
+  <div id="numpad"></div>
+</div>
+
+<script>
+'use strict';
+
+// ── Config ──
+const TOTAL_SHEEP = 6;
+
+// ── Audio ──
+let audioCtx = null;
+function getAC(){ if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
+
+function playOink(){
+  // Warm, bouncy oink — correct answer
+  try {
+    const ac = getAC();
+    const now = ac.currentTime;
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    osc.connect(gain); gain.connect(ac.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(520, now + 0.06);
+    osc.frequency.exponentialRampToValueAtTime(280, now + 0.18);
+    gain.gain.setValueAtTime(0.0, now);
+    gain.gain.linearRampToValueAtTime(0.28, now + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+    osc.start(now); osc.stop(now + 0.22);
+    // second little oink squeak
+    const osc2 = ac.createOscillator();
+    const gain2 = ac.createGain();
+    osc2.connect(gain2); gain2.connect(ac.destination);
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(440, now + 0.15);
+    osc2.frequency.exponentialRampToValueAtTime(600, now + 0.22);
+    osc2.frequency.exponentialRampToValueAtTime(380, now + 0.32);
+    gain2.gain.setValueAtTime(0.0, now + 0.15);
+    gain2.gain.linearRampToValueAtTime(0.18, now + 0.18);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.34);
+    osc2.start(now + 0.15); osc2.stop(now + 0.34);
+  } catch(e){}
+}
+
+function playBaa(){
+  // Soft sheep baa — wrong answer, gentle
+  try {
+    const ac = getAC();
+    const now = ac.currentTime;
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    const vib = ac.createOscillator();
+    const vibGain = ac.createGain();
+    vib.connect(vibGain); vibGain.connect(osc.frequency);
+    osc.connect(gain); gain.connect(ac.destination);
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(260, now);
+    osc.frequency.linearRampToValueAtTime(230, now + 0.4);
+    vib.type = 'sine'; vib.frequency.value = 6;
+    vibGain.gain.value = 8;
+    gain.gain.setValueAtTime(0.0, now);
+    gain.gain.linearRampToValueAtTime(0.18, now + 0.05);
+    gain.gain.setValueAtTime(0.18, now + 0.25);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+    vib.start(now); vib.stop(now + 0.5);
+    osc.start(now); osc.stop(now + 0.5);
+  } catch(e){}
+}
+
+function playFanfare(){
+  // Happy little win fanfare
+  try {
+    const ac = getAC();
+    const notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
+    notes.forEach((freq, i) => {
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.connect(gain); gain.connect(ac.destination);
+      osc.type = 'triangle';
+      const t = ac.currentTime + i * 0.13;
+      osc.frequency.setValueAtTime(freq, t);
+      gain.gain.setValueAtTime(0.0, t);
+      gain.gain.linearRampToValueAtTime(0.22, t + 0.04);
+      gain.gain.setValueAtTime(0.22, t + 0.09);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+      osc.start(t); osc.stop(t + 0.22);
+    });
+  } catch(e){}
+}
+
+function playSheepWalk(){
+  // Soft thud as sheep trots to pen
+  try {
+    const ac = getAC();
+    const now = ac.currentTime;
+    const buf = ac.createBuffer(1, ac.sampleRate * 0.08, ac.sampleRate);
+    const d = buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i] = (Math.random()*2-1) * Math.exp(-i/(ac.sampleRate*0.03));
+    const src = ac.createBufferSource();
+    const gain = ac.createGain();
+    const filter = ac.createBiquadFilter();
+    filter.type = 'lowpass'; filter.frequency.value = 300;
+    src.buffer = buf;
+    src.connect(filter); filter.connect(gain); gain.connect(ac.destination);
+    gain.gain.setValueAtTime(0.15, now);
+    src.start(now);
+  } catch(e){}
+}
+
+// ── State ──
+let sheep = [];
+let pendingSheep = null;
+let pennedCount = 0;
+let totalProblems = 0;
+let correctAnswers = 0;
+let gameActive = false;
+let currentAnswer = 0;
+let clouds = [];
+
+// ── DOM ──
+const scene = document.getElementById('scene');
+const pigEl = document.getElementById('pig');
+const problemText = document.getElementById('problem-text');
+const dotDisplay = document.getElementById('dot-display');
+const penInside = document.getElementById('pen-inside');
+const scoreText = document.getElementById('score-text');
+const speechEl = document.getElementById('speech');
+const numpad = document.getElementById('numpad');
+
+// ── Build numpad ──
+function buildNumpad(){
+  numpad.innerHTML = '';
+  const nums = [1,2,3,4,5,6,7,8,9,10];
+  nums.forEach(n => {
+    const btn = document.createElement('button');
+    btn.className = 'num-btn';
+    btn.textContent = n === 10 ? '10' : n;
+    btn.dataset.val = n;
+    btn.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      handleAnswer(n);
+      btn.classList.add('pressed');
+      setTimeout(() => btn.classList.remove('pressed'), 150);
+    });
+    numpad.appendChild(btn);
+  });
+}
+
+// ── Clouds ──
+function makeClouds(){
+  for(let i=0;i<3;i++){
+    const cloud = document.createElement('div');
+    cloud.className = 'cloud';
+    cloud.style.top = (8 + Math.random()*18) + '%';
+    const dur = 28 + Math.random()*20;
+    const delay = -Math.random()*dur;
+    cloud.style.animation = `drift ${dur}s ${delay}s linear infinite`;
+    for(let j=0;j<3;j++){
+      const puff = document.createElement('div');
+      const size = 35 + Math.random()*30;
+      puff.style.width = size+'px';
+      puff.style.height = size*0.7+'px';
+      puff.style.left = (j*25)+'px';
+      puff.style.top = (j%2===0?0:8)+'px';
+      cloud.appendChild(puff);
+    }
+    scene.appendChild(cloud);
+    clouds.push(cloud);
+  }
+}
+
+// ── Sheep factory ──
+function createSheep(index){
+  const el = document.createElement('div');
+  el.className = 'sheep';
+  el.id = 'sheep-' + index;
+  el.textContent = '🐑';
+  const startLeft = 5 + Math.random() * 25;
+  el.style.left = startLeft + '%';
+  scene.appendChild(el);
+  return { el, index, penned: false };
+}
+
+// ── Problem generator — counting focused for ages 3-5 ──
+function genProblem(difficulty){
+  const d = Math.min(difficulty, 2);
+  if(d === 0){
+    const n = 1 + Math.floor(Math.random() * 5);
+    return { type:'count', n1:n, n2:0, answer:n, text:`How many sheep? 🐷` };
+  }
+  if(d === 1){
+    const n = 2 + Math.floor(Math.random() * 7);
+    return { type:'count', n1:n, n2:0, answer:n, text:`How many sheep? 🐷` };
+  }
+  const n1 = 1 + Math.floor(Math.random() * 4);
+  const n2 = 1 + Math.floor(Math.random() * Math.min(4, 8 - n1));
+  return { type:'add', n1, n2, answer:n1+n2, text:`Count all the sheep! 🐷` };
+}
+
+function renderProblem(prob){
+  problemText.textContent = prob.text;
+  dotDisplay.innerHTML = '';
+
+  if(prob.type === 'count'){
+    const group = document.createElement('div');
+    group.className = 'dot-group';
+    for(let i=0;i<prob.n1;i++){
+      const s = document.createElement('span');
+      s.className = 'count-sheep';
+      s.textContent = '🐑';
+      s.style.animationDelay = (i*0.07)+'s';
+      group.appendChild(s);
+    }
+    dotDisplay.appendChild(group);
+  } else {
+    const g1 = document.createElement('div');
+    g1.className = 'dot-group';
+    for(let i=0;i<prob.n1;i++){
+      const s = document.createElement('span');
+      s.className = 'count-sheep';
+      s.textContent = '🐑';
+      s.style.animationDelay = (i*0.07)+'s';
+      g1.appendChild(s);
+    }
+    const plus = document.createElement('div');
+    plus.className = 'plus-sign';
+    plus.textContent = '+';
+    const g2 = document.createElement('div');
+    g2.className = 'dot-group';
+    for(let i=0;i<prob.n2;i++){
+      const s = document.createElement('span');
+      s.className = 'count-sheep';
+      s.textContent = '🐑';
+      s.style.animationDelay = (i*0.07+0.2)+'s';
+      g2.appendChild(s);
+    }
+    dotDisplay.appendChild(g1);
+    dotDisplay.appendChild(plus);
+    dotDisplay.appendChild(g2);
+  }
+
+  currentAnswer = prob.answer;
+}
+
+// ── Speech bubble ──
+let speechTimer = null;
+function showSpeech(text, duration=1800){
+  speechEl.textContent = text;
+  speechEl.style.left = (pigEl.offsetLeft - 10) + 'px';
+  speechEl.style.bottom = (parseFloat(getComputedStyle(pigEl).bottom) + 60) + 'px';
+  speechEl.classList.add('visible');
+  if(speechTimer) clearTimeout(speechTimer);
+  speechTimer = setTimeout(() => speechEl.classList.remove('visible'), duration);
+}
+
+// ── Herd a sheep into the pen ──
+function herdSheep(sheepObj){
+  const el = sheepObj.el;
+  el.style.left = '76%';
+  playSheepWalk();
+
+  setTimeout(() => {
+    el.remove();
+    sheepObj.penned = true;
+    pennedCount++;
+
+    const mini = document.createElement('div');
+    mini.className = 'sheep-penned';
+    mini.textContent = '🐑';
+    penInside.appendChild(mini);
+    mini.style.animation = 'dotPop 0.3s ease backwards';
+
+    scoreText.textContent = `${pennedCount} / ${TOTAL_SHEEP}`;
+    updatePigPosition();
+
+    if(pennedCount >= TOTAL_SHEEP){
+      setTimeout(showWin, 800);
+    } else {
+      setTimeout(nextSheep, 600);
+    }
+  }, 1300);
+}
+
+// ── Pig follows the action ──
+function updatePigPosition(){
+  const progress = pennedCount / TOTAL_SHEEP;
+  const leftPct = 35 + progress * 25;
+  pigEl.style.left = leftPct + '%';
+}
+
+// ── Answer handler ──
+function handleAnswer(n){
+  if(!gameActive || !pendingSheep) return;
+  // Unlock audio on first interaction
+  getAC();
+
+  const btn = document.querySelector(`.num-btn[data-val="${n}"]`);
+
+  if(n === currentAnswer){
+    if(btn){ btn.classList.add('correct'); setTimeout(()=>btn.classList.remove('correct'),350); }
+    correctAnswers++;
+    totalProblems++;
+    gameActive = false;
+    playOink();
+    pigEl.classList.add('happy');
+    setTimeout(()=>pigEl.classList.remove('happy'),500);
+    showSpeech('🎉 That\'s right!', 1400);
+    herdSheep(pendingSheep);
+    pendingSheep = null;
+  } else {
+    if(btn){ btn.classList.add('wrong'); setTimeout(()=>btn.classList.remove('wrong'),350); }
+    totalProblems++;
+    playBaa();
+    pigEl.classList.add('confused');
+    setTimeout(()=>pigEl.classList.remove('confused'),550);
+    showSpeech('Hmm, try again! 🤔', 1200);
+  }
+}
+
+// ── Pick next sheep ──
+function nextSheep(){
+  const available = sheep.filter(s => !s.penned && s !== pendingSheep);
+  if(available.length === 0) return;
+
+  pendingSheep = available[Math.floor(Math.random() * available.length)];
+
+  const difficulty = Math.floor(pennedCount / 2);
+  const prob = genProblem(difficulty);
+  renderProblem(prob);
+
+  sheep.forEach(s => { if(s.el) s.el.style.filter = 'none'; });
+  if(pendingSheep.el){
+    pendingSheep.el.style.filter = 'drop-shadow(0 0 6px rgba(245,166,35,0.8))';
+  }
+
+  showSpeech(`Come here, sheep! 🐑`, 1500);
+  gameActive = true;
+}
+
+// ── Win ──
+function showWin(){
+  playFanfare();
+  for(let i=0;i<50;i++){
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random()*100 + 'vw';
+    c.style.background = ['#f5a623','#7bc67e','#7ec8e3','#f9c6c6','#fff'][Math.floor(Math.random()*5)];
+    c.style.animationDuration = (1.5+Math.random()*2)+'s';
+    c.style.animationDelay = Math.random()*0.5+'s';
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(), 4000);
+  }
+  document.getElementById('win-sub').textContent =
+    `You got ${correctAnswers} right on the first try! 🌟`;
+  document.getElementById('win-screen').style.display = 'flex';
+}
+
+// ── Start / restart ──
+function startGame(){
+  // Unlock AudioContext on user gesture
+  try { getAC().resume(); } catch(e){}
+
+  document.getElementById('title-screen').style.display = 'none';
+  document.getElementById('win-screen').style.display = 'none';
+
+  sheep.forEach(s => s.el && s.el.remove());
+  sheep = [];
+  pendingSheep = null;
+  pennedCount = 0;
+  totalProblems = 0;
+  correctAnswers = 0;
+  gameActive = false;
+  penInside.innerHTML = '';
+  speechEl.classList.remove('visible');
+
+  pigEl.style.left = '35%';
+  scoreText.textContent = `0 / ${TOTAL_SHEEP}`;
+
+  for(let i=0;i<TOTAL_SHEEP;i++){
+    const s = createSheep(i);
+    s.el.style.bottom = `calc(42% + ${Math.random()*12}px)`;
+    sheep.push(s);
+  }
+
+  buildNumpad();
+  if(!clouds.length) makeClouds();
+
+  setTimeout(() => {
+    showSpeech('Let\'s herd the sheep! 🐑', 1800);
+    setTimeout(nextSheep, 1000);
+  }, 400);
+}
+
+// ── Keyboard support ──
+document.addEventListener('keydown', e => {
+  const n = parseInt(e.key);
+  if(!isNaN(n) && n >= 1 && n <= 9) handleAnswer(n);
+  if(e.key === '0') handleAnswer(10);
+});
+
+document.addEventListener('touchmove', e => e.preventDefault(), {passive:false});
+</script>
+</body>
+</html>
+
